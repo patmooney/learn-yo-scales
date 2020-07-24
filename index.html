@@ -20,9 +20,15 @@
             ul#l > li {
                 margin-bottom: .5rem;
             }
-            input[type="checkbox"] {
-                margin: 1rem;
-                border: solid 1px grey;
+            div.note-sel {
+                display: inline-block;
+                margin: .3rem;
+                padding: .3rem;
+                background-color: lightgrey;
+                cursor: pointer;
+            }
+            div.note-sel.selected {
+                background-color: green;
             }
         </style>
     </head>
@@ -30,18 +36,18 @@
     <body>
         <h3 id="score">0 of -1</h3>
         <p>
-            <input type="checkbox" checked value="A">A</input>
-            <input type="checkbox" checked value="Bb">Bb</input>
-            <input type="checkbox" checked value="B">B</input>
-            <input type="checkbox" checked value="C">C</input>
-            <input type="checkbox" checked value="C#">C#</input>
-            <input type="checkbox" checked value="D">D</input>
-            <input type="checkbox" checked value="Eb">Eb</input>
-            <input type="checkbox" checked value="E">E</input>
-            <input type="checkbox" checked value="F">F</input>
-            <input type="checkbox" checked value="F#">F#</input>
-            <input type="checkbox" checked value="G">G</input>
-            <input type="checkbox" checked value="Ab">Ab</input>
+            <div class="note-sel">A</div>
+            <div class="note-sel">Bb</div>
+            <div class="note-sel">B</div>
+            <div class="note-sel">C</div>
+            <div class="note-sel">C#</div>
+            <div class="note-sel">D</div>
+            <div class="note-sel">Eb</div>
+            <div class="note-sel">E</div>
+            <div class="note-sel">F</div>
+            <div class="note-sel">F#</div>
+            <div class="note-sel">G</div>
+            <div class="note-sel">Ab</div>
         </p>
         <p id="t"></p>
         <p>
@@ -53,10 +59,23 @@
         <ul id="l"></ul>
         <script>
             function start() {
-                const allowedNotes = Array.prototype.map.call(
-                    document.querySelectorAll('input[type="checkbox"]:checked'),
-                    el => el.value
+                const notes = ['A','Bb','B','C', 'C#', 'D', 'Eb', 'E', 'F', 'F#',
+                    'G', 'Ab'];
+
+                const intervals = ['Perfect Unison (I)', 'Minor Second (Flat II)',
+                    'Major Second (II)',
+                    'Minor Third (Flat III)', 'Major Third (III)', 'Perfect Fourth (IV)',
+                    'Tri-Tone (Flat V)', 'Perfect Fifth (V)', 'Minor Sixth (Flat VI)',
+                    'Major Sixth', 'Minor Seventh (Flat VII)', 'Major Seventh (VII)',
+                    'Perfect Octave'];
+
+                let allowedNotes = Array.prototype.map.call(
+                    document.querySelectorAll('div.note-sel.selected'),
+                    el => el.innerText
                 );
+                if (!allowedNotes.length) {
+                    allowedNotes = notes;
+                }
                 document.forms[0].onsubmit = () => {
                     submitAnswer();
                     return false;
@@ -67,16 +86,6 @@
                 const list = document.getElementById('l');
                 const scoreboard = document.getElementById('score');
                 let score = 0, total = -1, sTime = 0, tTime = -1;
-
-                const notes = ['A','Bb','B','C', 'C#', 'D', 'Eb', 'E', 'F', 'F#',
-                    'G', 'Ab'];
-
-                const intervals = ['Perfect Unison (I)', 'Minor Second (Flat II)',
-                    'Major Second (II)',
-                    'Minor Third (Flat III)', 'Major Third (III)', 'Perfect Fourth (IV)',
-                    'Tri-Tone (Flat V)', 'Perfect Fifth (V)', 'Minor Sixth (Flat VI)',
-                    'Major Sixth', 'Minor Seventh (Flat VII)', 'Major Seventh (VII)',
-                    'Perfect Octave'];
 
                 const synonym = {
                     'A#': 'Bb',
@@ -176,8 +185,15 @@
 
                 newQuestion();
             }
-            document.querySelectorAll('input[type="checkbox"]').forEach(
-                el => el.addEventListener('change', start)
+            document.querySelectorAll('div.note-sel').forEach(
+                el => el.addEventListener('click', () => {
+                    if (el.classList.contains('selected')) {
+                        el.classList.remove('selected');
+                    } else {
+                        el.classList.add('selected');
+                    }
+                    start();
+                })
             );
             window.onload = start;
         </script>
