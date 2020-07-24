@@ -24,18 +24,39 @@
                 display: inline-block;
                 margin: .3rem;
                 padding: .3rem;
-                background-color: lightgrey;
+                background-color: white;
                 cursor: pointer;
             }
             div.note-sel.selected {
                 background-color: green;
             }
+            div.selected-notes {
+                background-color: lightgrey;
+                padding: .5rem;
+            }
+            div.selected-notes > h4 {
+                padding: 0;
+                margin: 0 0 .5rem;
+            }
+            h3#score {
+                background-color: lightblue;
+                padding: .2rem;
+            }
+            div.note-answer {
+                display: inline-block;
+                padding: .3rem;
+                background-color: lightblue;
+                cursor: pointer;
+                margin: 0 .5rem;
+            }
         </style>
     </head>
 
     <body>
-        <h3 id="score">0 of -1</h3>
-        <p>
+        <div class="selected-notes">
+            <h4><a href="#">Reset</a></h4>
+            Filter notes: 
+            <div class="note-sel">Ab</div>
             <div class="note-sel">A</div>
             <div class="note-sel">Bb</div>
             <div class="note-sel">B</div>
@@ -47,20 +68,15 @@
             <div class="note-sel">F</div>
             <div class="note-sel">F#</div>
             <div class="note-sel">G</div>
-            <div class="note-sel">Ab</div>
-        </p>
-        <p id="t"></p>
-        <p>
-            <form>
-                <input type="text" id="i" autocomplete='off'/>
-                <button type="submit" id="go">Go</button>
-            </form>
-        </p>
+        </div>
+        <h3 id="score"></h3>
+        <h3 id="t"></h3>
+        <p id="answer"></p>
         <ul id="l"></ul>
         <script>
             function start() {
-                const notes = ['A','Bb','B','C', 'C#', 'D', 'Eb', 'E', 'F', 'F#',
-                    'G', 'Ab'];
+                const notes = ['Ab', 'A','Bb','B','C', 'C#', 'D', 'Eb', 'E', 'F', 'F#',
+                    'G'];
 
                 const intervals = ['Perfect Unison (I)', 'Minor Second (Flat II)',
                     'Major Second (II)',
@@ -69,6 +85,13 @@
                     'Major Sixth', 'Minor Seventh (Flat VII)', 'Major Seventh (VII)',
                     'Perfect Octave'];
 
+                document.querySelectorAll('div.note-answer').forEach(
+                    el => {
+                        el.removeEventListener('click', submitAnswer);
+                        el.addEventListener('click', submitAnswer);
+                    }
+                );
+
                 let allowedNotes = Array.prototype.map.call(
                     document.querySelectorAll('div.note-sel.selected'),
                     el => el.innerText
@@ -76,16 +99,23 @@
                 if (!allowedNotes.length) {
                     allowedNotes = notes;
                 }
-                document.forms[0].onsubmit = () => {
-                    submitAnswer();
-                    return false;
-                };
                 const text = document.getElementById('t');
-                const submit = document.getElementById('go');
-                const input = document.getElementById('i');
                 const list = document.getElementById('l');
                 const scoreboard = document.getElementById('score');
+                const answerContainer = document.getElementById('answer');
                 let score = 0, total = -1, sTime = 0, tTime = -1;
+
+                answerContainer.innerHTML = "";
+                notes.forEach(
+                    n => {
+                        const divAns = document.createElement('div');
+                        divAns.classList.add('note-answer');
+                        divAns.addEventListener('click', submitAnswer);
+                        divAns.dataset.val = n;
+                        divAns.innerText = n;
+                        answerContainer.appendChild(divAns);
+                    }
+                );
 
                 const synonym = {
                     'A#': 'Bb',
@@ -121,17 +151,10 @@
                     return notes[idx];
                 }
 
-                function submitAnswer() {
-                    const answer = normalise(i.value);
-                    if (!answer) {
-                        onError(`"${i.value}" is not a valid note`);
-                        i.focus();
-                        i.select();
-                        return;
-                    }
-                    i.value = "";
+                function submitAnswer(e) {
+                    const answer = normalise(e.target.dataset.val);
                     const correct = getNote(t.dataset.note, t.dataset.interval);
-                    if (cF(answer) === correct) {
+                    if (answer === correct) {
                         onCorrect(text.innerText, correct);
                     } else {
                         onWrong(text.innerText, correct, answer);
@@ -151,8 +174,7 @@
                     text.innerHTML = `${intervals[iIdx]} of <strong>${notes[nIdx]}</strong>`;
                     total++;
                     const avgTime = tTime > -1 && ((tTime / score) / 1000).toFixed(2);
-                    scoreboard.innerText = `${score} of ${total} ${avgTime ? ` - AVG ${avgTime}s` : ''}`;
-                    i.focus();
+                    scoreboard.innerText = `Answered ${score} of ${total} / avg. time: ${avgTime ? `${avgTime}s` : '-'}`;
                     sTime = Date.now();                
                 }
 
