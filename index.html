@@ -49,6 +49,11 @@
             div.container.show {
                 display: block;
             }
+            h2#t {
+                background-color: black;
+                color: white;
+                padding: 1rem;
+            }
             @media only screen and (max-width: 600px) {
                 div#answer {
                     display: flex;
@@ -58,7 +63,7 @@
             }
             div.note-answer {
                 display: inline-block;
-                padding: .3rem 1rem;
+                padding: .4rem 1rem;
                 background-color: lightblue;
                 cursor: pointer;
                 margin: 0 .5rem .5rem;
@@ -72,31 +77,51 @@
             div#interval-filter {
                 display: inline-block;
             }
+            div.nav {
+                display: flex;
+                margin: 0;
+                padding: 0;
+            }
+            div.nav > h4.item {
+                padding: 0 .5rem 0 0;
+                margin: 0;
+            }
+            div.nav > h4.item.toggle {
+                margin: 0 0 0 auto;
+            }
+            div#options {
+                margin: .5rem 0 0 0;
+            }
         </style>
     </head>
 
     <body>
         <div class="menu">
-            <h4 class="item"><a href="#" data-mode="game">Play</a></h4>
-            <h4 class="item"><a href="#" data-mode="help">Help</a></h4>
-            <div>
-                <strong>Filter notes:</strong>
-                <div id="note-filter"></div>
+            <div class="nav">
+                <h4 class="item"><a href="#" data-mode="game">Play</a></h4>
+                <h4 class="item"><a href="#" data-mode="help">Help</a></h4>
+                <h4 class="item toggle"><a href="#" id="toggle-options">Opt.</a></h4>
             </div>
-            <div>
-                <strong>Interval Filter:</strong>
-                <div id="interval-filter"></div>
-            </div>
-            <div>
-                <strong>Include Accidentals:</strong>
-                <input type="checkbox" id="include-accidentals" />
-                <strong>Randomise Buttons</strong>
-                <input type="checkbox" id="randomise-buttons" />
+            <div id="options" style="display: block">
+                <div>
+                    <strong>Filter notes:</strong>
+                    <div id="note-filter"></div>
+                </div>
+                <div>
+                    <strong>Interval Filter:</strong>
+                    <div id="interval-filter"></div>
+                </div>
+                <div>
+                    <strong>Include Accidentals:</strong>
+                    <input type="checkbox" id="include-accidentals" />
+                    <strong>Randomise Buttons</strong>
+                    <input type="checkbox" id="randomise-buttons" />
+                </div>
             </div>
         </div>
         <div class="container" data-container="game">
             <h3 id="score"></h3>
-            <h3 id="t"></h3>
+            <h2 id="t"></h2>
             <div id="answer"></div>
             <ul id="l"></ul>
         </div>
@@ -247,13 +272,18 @@
 
                 // view
                 function printButtons(initial = false) {
-                    const random = document.getElementById('randomise-buttons').checked;
+                    const isRandom = document.getElementById('randomise-buttons').checked;
+                    const shouldRandom = isRandom && initial
+                        ? true
+                        : isRandom && Math.random() >= 0.8;
 
-                    if (!initial && !random) {
+                    console.log({ initial, isRandom, shouldRandom });
+
+                    if (!initial && !shouldRandom) {
                         return;
                     }
 
-                    const buttonNotes = random
+                    const buttonNotes = shouldRandom
                         ? shuffle(notes.slice())
                         : notes;
 
@@ -422,6 +452,15 @@
                     evt.preventDefault();
                     start(el.dataset.mode);
                 })
+            );
+
+            document.getElementById('toggle-options').addEventListener(
+                'click', evt => {
+                    const optContainer = document.getElementById('options');
+                    optContainer.style.display = optContainer.style.display === 'block'
+                        ? 'none'
+                        : 'block';
+                }
             );
 
             window.onload = () => start('game');
