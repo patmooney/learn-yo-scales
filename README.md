@@ -9,3 +9,4 @@ trawling through the app store, and I was right.
  - Make "help" easier to digest.
  - Investigate the absolute easiest way to get this into an offline mobile app.
  - Add more game modes as the whim dictates.
+ - Learning Mode... Add more intervals & notes after *n* successive answers.
