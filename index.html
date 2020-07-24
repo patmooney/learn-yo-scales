@@ -30,82 +30,205 @@
             div.note-sel.selected {
                 background-color: green;
             }
-            div.selected-notes {
+            div.menu {
                 background-color: lightgrey;
                 padding: .5rem;
             }
-            div.selected-notes > h4 {
+            div.menu > h4.item {
                 padding: 0;
-                margin: 0 0 .5rem;
+                margin: 0 .5rem .5rem 0;
+                display: inline-block;
             }
             h3#score {
                 background-color: lightblue;
                 padding: .2rem;
             }
+            div.container {
+                display: none;
+            }
+            div.container.show {
+                display: block;
+            }
+            @media only screen and (max-width: 600px) {
+                div#answer {
+                    display: flex;
+                    justify-content: space-evenly;
+                    flex-wrap: wrap;
+                }
+            }
             div.note-answer {
                 display: inline-block;
-                padding: .3rem;
+                padding: .3rem 1rem;
                 background-color: lightblue;
                 cursor: pointer;
-                margin: 0 .5rem;
+                margin: 0 .5rem .5rem;
+            }
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+            }
+            div#note-filter {
+                display: inline-block;
             }
         </style>
     </head>
 
     <body>
-        <div class="selected-notes">
-            <h4><a href="#">Reset</a></h4>
-            Filter notes: 
-            <div class="note-sel">Ab</div>
-            <div class="note-sel">A</div>
-            <div class="note-sel">Bb</div>
-            <div class="note-sel">B</div>
-            <div class="note-sel">C</div>
-            <div class="note-sel">C#</div>
-            <div class="note-sel">D</div>
-            <div class="note-sel">Eb</div>
-            <div class="note-sel">E</div>
-            <div class="note-sel">F</div>
-            <div class="note-sel">F#</div>
-            <div class="note-sel">G</div>
+        <div class="menu">
+            <h4 class="item"><a href="#" data-mode="game">Play</a></h4>
+            <h4 class="item"><a href="#" data-mode="help">Help</a></h4>
+            <div>
+                <strong>Filter notes:</strong>
+                <div id="note-filter"></div>
+            </div>
+            <div>
+                <strong>Include accidentals:</strong>
+                <input type="checkbox" id="include-accidentals" />
+            </div>
         </div>
-        <h3 id="score"></h3>
-        <h3 id="t"></h3>
-        <p id="answer"></p>
-        <ul id="l"></ul>
+        <div class="container" data-container="game">
+            <h3 id="score"></h3>
+            <h3 id="t"></h3>
+            <div id="answer"></div>
+            <ul id="l"></ul>
+        </div>
+        <div class="container" data-container="help"></div>
+
         <script>
-            function start() {
-                const notes = ['Ab', 'A','Bb','B','C', 'C#', 'D', 'Eb', 'E', 'F', 'F#',
-                    'G'];
+            const notes = ['Ab', 'A','Bb','B','C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G'];
+            const intervals = ['Perfect Unison (I)', 'Minor Second (Flat II)',
+                'Major Second (II)',
+                'Minor Third (Flat III)', 'Major Third (III)', 'Perfect Fourth (IV)',
+                'Tri-Tone (Flat V)', 'Perfect Fifth (V)', 'Minor Sixth (Flat VI)',
+                'Major Sixth (VI)', 'Minor Seventh (Flat VII)', 'Major Seventh (VII)',
+                'Perfect Octave (VIII)'];
 
-                const intervals = ['Perfect Unison (I)', 'Minor Second (Flat II)',
-                    'Major Second (II)',
-                    'Minor Third (Flat III)', 'Major Third (III)', 'Perfect Fourth (IV)',
-                    'Tri-Tone (Flat V)', 'Perfect Fifth (V)', 'Minor Sixth (Flat VI)',
-                    'Major Sixth', 'Minor Seventh (Flat VII)', 'Major Seventh (VII)',
-                    'Perfect Octave'];
+            const modes = { // Obviously a TODO to extend
+                'Ionian': [2, 2, 1, 2, 2, 2, 1] // whole whole half etc
+            };
+            const synonym = {
+                'A#': 'Bb',
+                'Db': 'C#',
+                'D#': 'Eb',
+                'Gb': 'F#',
+                'G#': 'Ab'
+            };
 
-                document.querySelectorAll('div.note-answer').forEach(
-                    el => {
-                        el.removeEventListener('click', submitAnswer);
-                        el.addEventListener('click', submitAnswer);
-                    }
-                );
+            const noteMap = notes.reduce(
+                (nacc, n, nIdx) => ({ ...nacc, [n]: intervals.reduce(
+                    (iacc, i, iIdx) => ({
+                        ...iacc,
+                        [i]: getNote(nIdx, iIdx)
+                    }), {}
+                ) }), {}
+            );
 
+            function getNote(nIdx, iIdx) {
+                const idx = parseInt(nIdx) + parseInt(iIdx);
+                if (idx > notes.length - 1) {
+                    return notes[idx - (notes.length)];
+                }
+                return notes[idx];
+            }
+
+            /*
+                START completely over-engineers one-page web app without a framework bullshit
+            */
+            const containersMap = Array.prototype.reduce.call(
+                document.querySelectorAll('div.container'),
+                (acc, el) => ({
+                    ...acc,
+                    [el.dataset.container]: el
+                }), {}
+            );
+            const dispatch = { help, game };
+            const goEvt = new Event('go');
+            const filterEvt = new Event('filter');
+            Object.values(containersMap).forEach(
+                el => el.addEventListener('go', dispatch[el.dataset.container])
+            );
+            // start, AKA switch to new container and init it
+            function start(mode) {
+                const currentMode = document.querySelector('div.container.show');
+                if (currentMode) {
+                    currentMode.classList.remove('show');
+                    mode = mode || currentMode.dataset.container;
+                } else {
+                    mode = mode || 'play';
+                }
+                const newMode = document.querySelector(`div.container[data-container="${mode}"]`);
+                newMode.classList.add('show');
+                newMode.dispatchEvent(goEvt);
+            }
+            /*
+                END, I promise
+            */
+
+            function getAllowedNotes() {
                 let allowedNotes = Array.prototype.map.call(
                     document.querySelectorAll('div.note-sel.selected'),
                     el => el.innerText
                 );
-                if (!allowedNotes.length) {
-                    allowedNotes = notes;
+                return allowedNotes.length ? allowedNotes : notes;
+            }
+
+            // Per mode, and whether we should include accidental notes
+            function getAllowedIntervals () {
+                const mode = 'Ionian'; // to be continued....
+                if (document.getElementById('include-accidentals').checked) {
+                    return intervals;
                 }
+
+                // convert the modal relative intervals (whole whole half etc) into
+                // absolute indexes for our list of intervals
+                const modalIdxs = modes[mode].reduce(
+                    (acc, skip) => ([ ...acc, acc.slice(-1)[0] + skip ]), [0]
+                );
+
+                // convert absolute indexes into interval labels
+                return modalIdxs.reduce(
+                    (acc, idx) => ([ ...acc, intervals[idx] ]), []
+                );
+            }
+
+            // containers /  views
+            function help(evt) {
+                const allowedNotes = getAllowedNotes();
+                const allowedIntervals = getAllowedIntervals();
+                const container = evt.target;
+                container.innerHTML = "";
+                allowedNotes.forEach(
+                    note => {
+                        const div = document.createElement('div');
+                        const ul = document.createElement('ul');
+                        const title = document.createElement('h3');
+                        title.innerText = note;
+                        div.appendChild(title);
+
+                        allowedIntervals.forEach(
+                            interval => {
+                                const intNote = noteMap[note][interval];
+                                const li = document.createElement('li');
+                                li.innerHTML = `${interval}: <strong>${intNote}</strong>`;
+                                ul.appendChild(li);
+                            }
+                        )
+                        div.appendChild(ul);
+                        container.appendChild(div);
+                    }
+                );
+            }
+
+            function game() {
                 const text = document.getElementById('t');
                 const list = document.getElementById('l');
                 const scoreboard = document.getElementById('score');
                 const answerContainer = document.getElementById('answer');
                 let score = 0, total = -1, sTime = 0, tTime = -1;
-
+                list.innerHTML = "";
                 answerContainer.innerHTML = "";
+                const allowedNotes = getAllowedNotes();
+
+                // view
                 notes.forEach(
                     n => {
                         const divAns = document.createElement('div');
@@ -117,23 +240,6 @@
                     }
                 );
 
-                const synonym = {
-                    'A#': 'Bb',
-                    'Db': 'C#',
-                    'D#': 'Eb',
-                    'Gb': 'F#',
-                    'G#': 'Ab'
-                };
-
-                const noteMap = notes.reduce(
-                    (nacc, n, nIdx) => ({ ...nacc, [n]: intervals.reduce(
-                        (iacc, i, iIdx) => ({
-                            ...iacc,
-                            [i]: getNote(nIdx, iIdx)
-                        }), {}
-                    ) }), {}
-                );
-
                 function normalise(input) {
                     let normal = cF(input);
                     normal = synonym[normal] || normal;
@@ -143,13 +249,6 @@
                     return normal;
                 }
 
-                function getNote(nIdx, iIdx) {
-                    const idx = parseInt(nIdx) + parseInt(iIdx);
-                    if (idx > notes.length - 1) {
-                        return notes[idx - (notes.length)];
-                    }
-                    return notes[idx];
-                }
 
                 function submitAnswer(e) {
                     const answer = normalise(e.target.dataset.val);
@@ -167,20 +266,24 @@
                 }
                 
                 function newQuestion() {
+                    // Get random note/interval pair
                     const nIdx = getAllowedRandomNote();
                     const iIdx = Math.round(Math.random() * (intervals.length - 1));
+
+                    // Maintain state within the element
                     t.dataset.note = nIdx;
                     t.dataset.interval = iIdx;
                     text.innerHTML = `${intervals[iIdx]} of <strong>${notes[nIdx]}</strong>`;
+
+                    // Update view
                     total++;
-                    const avgTime = tTime > -1 && ((tTime / score) / 1000).toFixed(2);
+                    const avgTime = tTime > -1 && ((tTime / score) / 1000).toFixed(3);
                     scoreboard.innerText = `Answered ${score} of ${total} / avg. time: ${avgTime ? `${avgTime}s` : '-'}`;
                     sTime = Date.now();                
                 }
 
                 function getAllowedRandomNote() {
                     const nIdx = Math.round(Math.random() * (allowedNotes.length - 1));
-                    console.log({ nIdx, al: allowedNotes[nIdx] });
                     return notes.indexOf(allowedNotes[nIdx]);
                 }
 
@@ -192,11 +295,22 @@
                     score++;
                     tTime += Date.now() - sTime;
                     output(`<strong class='text-correct'>Correct</strong> - The ${desc} is ${correct}`);
+                    flash("#DDFFDD");
+                }
+
+                function flash(fromColour) {
+                    document.body.style.transition = "";
+                    document.body.style.backgroundColor = fromColour;
+                    setTimeout(() => {
+                        document.body.style.transition = "background-color 1.5s";
+                        document.body.style.backgroundColor = "#FFFFFF";
+                    });
                 }
 
                 function onWrong(desc, correct, wrong) {
                     output(`<strong class='text-wrong'>Wrong</strong> - The ${desc}
                         is <strong><u>${correct}</u></strong>, not ${wrong}`);
+                    flash("#FFDDDD");
                 }
 
                 function output(html) {
@@ -207,17 +321,40 @@
 
                 newQuestion();
             }
-            document.querySelectorAll('div.note-sel').forEach(
-                el => el.addEventListener('click', () => {
-                    if (el.classList.contains('selected')) {
-                        el.classList.remove('selected');
-                    } else {
-                        el.classList.add('selected');
-                    }
-                    start();
+
+            // global menu/settings setup
+            const noteFilterContainer = document.getElementById('note-filter');
+            notes.forEach(
+                n => {
+                    const divFil = document.createElement('div');
+                    divFil.classList.add('note-sel');
+                    divFil.addEventListener('click', evt => {
+                        const el = evt.target;
+                        if (el.classList.contains('selected')) {
+                            el.classList.remove('selected');
+                        } else {
+                            el.classList.add('selected');
+                        }
+                        start();
+                    });
+                    divFil.dataset.val = n;
+                    divFil.innerText = n;
+                    noteFilterContainer.appendChild(divFil);
+                }
+            );
+
+            document.getElementById('include-accidentals').addEventListener(
+                'change', evt => start()
+            );
+
+            document.querySelectorAll('h4.item > a').forEach(
+                el => el.addEventListener('click', (evt) => {
+                    evt.preventDefault();
+                    start(el.dataset.mode);
                 })
             );
-            window.onload = start;
+
+            window.onload = () => start('game');
         </script>
     </body>
 </html>
