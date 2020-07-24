@@ -227,6 +227,7 @@
                 list.innerHTML = "";
                 answerContainer.innerHTML = "";
                 const allowedNotes = getAllowedNotes();
+                const allowedIntervals = getAllowedIntervals();
 
                 // view
                 notes.forEach(
@@ -268,7 +269,7 @@
                 function newQuestion() {
                     // Get random note/interval pair
                     const nIdx = getAllowedRandomNote();
-                    const iIdx = Math.round(Math.random() * (intervals.length - 1));
+                    const iIdx = getAllowedRandomInterval();
 
                     // Maintain state within the element
                     t.dataset.note = nIdx;
@@ -285,6 +286,11 @@
                 function getAllowedRandomNote() {
                     const nIdx = Math.round(Math.random() * (allowedNotes.length - 1));
                     return notes.indexOf(allowedNotes[nIdx]);
+                }
+
+                function getAllowedRandomInterval() {
+                    const iIdx = Math.round(Math.random() * (allowedIntervals.length - 1));
+                    return intervals.indexOf(allowedIntervals[iIdx]);
                 }
 
                 function onError(desc) {
