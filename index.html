@@ -20,14 +20,14 @@
             ul#l > li {
                 margin-bottom: .5rem;
             }
-            div.note-sel {
+            div.filter-sel {
                 display: inline-block;
                 margin: .3rem;
                 padding: .3rem;
                 background-color: white;
                 cursor: pointer;
             }
-            div.note-sel.selected {
+            div.filter-sel.selected {
                 background-color: green;
             }
             div.menu {
@@ -69,6 +69,9 @@
             div#note-filter {
                 display: inline-block;
             }
+            div#interval-filter {
+                display: inline-block;
+            }
         </style>
     </head>
 
@@ -79,6 +82,10 @@
             <div>
                 <strong>Filter notes:</strong>
                 <div id="note-filter"></div>
+            </div>
+            <div>
+                <strong>Interval Filter:</strong>
+                <div id="interval-filter"></div>
             </div>
             <div>
                 <strong>Include accidentals:</strong>
@@ -173,6 +180,14 @@
 
             // Per mode, and whether we should include accidental notes
             function getAllowedIntervals () {
+                const allowedIntervals = Array.prototype.map.call(
+                    document.querySelectorAll('div.interval-sel.selected'),
+                    el => intervals[el.dataset.val]
+                );
+                if (allowedIntervals.length) {
+                    return allowedIntervals;
+                }
+
                 const mode = 'Ionian'; // to be continued....
                 if (document.getElementById('include-accidentals').checked) {
                     return intervals;
@@ -333,7 +348,7 @@
             notes.forEach(
                 n => {
                     const divFil = document.createElement('div');
-                    divFil.classList.add('note-sel');
+                    divFil.classList.add('note-sel', 'filter-sel');
                     divFil.addEventListener('click', evt => {
                         const el = evt.target;
                         if (el.classList.contains('selected')) {
@@ -346,6 +361,26 @@
                     divFil.dataset.val = n;
                     divFil.innerText = n;
                     noteFilterContainer.appendChild(divFil);
+                }
+            );
+
+            const intervalFilterContainer = document.getElementById('interval-filter');
+            ['I', 'IIb', 'II', 'IIIb', 'III', 'IV', 'Vb', 'V', 'VIb', 'VI', 'VIIb', 'VII', 'VIII'].forEach(
+                (i, idx) => {
+                    const divFil = document.createElement('div');
+                    divFil.classList.add('interval-sel', 'filter-sel');
+                    divFil.addEventListener('click', evt => {
+                        const el = evt.target;
+                        if (el.classList.contains('selected')) {
+                            el.classList.remove('selected');
+                        } else {
+                            el.classList.add('selected');
+                        }
+                        start();
+                    });
+                    divFil.dataset.val = idx;
+                    divFil.innerText = i;
+                    intervalFilterContainer.appendChild(divFil);
                 }
             );
 
