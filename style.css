@@ -1,0 +1,96 @@
+.text-error {
+    color: white;
+    background-color: grey;
+    padding: 0 .5rem;
+}
+.text-correct {
+    color: white;
+    background-color: green;
+    padding: 0 .5rem;
+}
+.text-wrong {
+    color: white;
+    background-color: red;
+    padding: 0 .5rem;
+}
+ul#l > li {
+    margin-bottom: .5rem;
+}
+div.filter-sel {
+    display: inline-block;
+    margin: .3rem;
+    padding: .3rem;
+    background-color: white;
+    cursor: pointer;
+}
+div.filter-sel.selected {
+    background-color: green;
+}
+div.menu {
+    background-color: lightgrey;
+    padding: .5rem;
+}
+div.menu > h4.item {
+    padding: 0;
+    margin: 0 .5rem .5rem 0;
+    display: inline-block;
+}
+h3#score {
+    background-color: lightblue;
+    padding: .2rem;
+}
+div.container {
+    display: none;
+}
+div.container.show {
+    display: block;
+}
+h2#t {
+    background-color: black;
+    color: white;
+    padding: 1rem;
+}
+@media only screen and (max-width: 600px) {
+    div#answer {
+        display: flex;
+        justify-content: space-evenly;
+        flex-wrap: wrap;
+    }
+}
+div.note-answer {
+    display: inline-block;
+    padding: .4rem 1rem;
+    background-color: lightblue;
+    cursor: pointer;
+    margin: 0 .5rem .5rem;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+div#note-filter {
+    display: inline-block;
+}
+div#interval-filter {
+    display: inline-block;
+}
+div.nav {
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+div.nav > h4.item {
+    padding: 0 .5rem 0 0;
+    margin: 0;
+}
+div.nav > h4.item.toggle {
+    margin: 0 0 0 auto;
+}
+div#options {
+    margin: .5rem 0 0 0;
+}
+@media only screen and (min-width: 601px) {
+    main {
+        width: 1024px;
+        margin: 0 auto;
+    }
+}

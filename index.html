@@ -1,471 +1,65 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>
-            .text-error {
-                color: white;
-                background-color: grey;
-                padding: 0 .5rem;
-            }
-            .text-correct {
-                color: white;
-                background-color: green;
-                padding: 0 .5rem;
-            }
-            .text-wrong {
-                color: white;
-                background-color: red;
-                padding: 0 .5rem;
-            }
-            ul#l > li {
-                margin-bottom: .5rem;
-            }
-            div.filter-sel {
-                display: inline-block;
-                margin: .3rem;
-                padding: .3rem;
-                background-color: white;
-                cursor: pointer;
-            }
-            div.filter-sel.selected {
-                background-color: green;
-            }
-            div.menu {
-                background-color: lightgrey;
-                padding: .5rem;
-            }
-            div.menu > h4.item {
-                padding: 0;
-                margin: 0 .5rem .5rem 0;
-                display: inline-block;
-            }
-            h3#score {
-                background-color: lightblue;
-                padding: .2rem;
-            }
-            div.container {
-                display: none;
-            }
-            div.container.show {
-                display: block;
-            }
-            h2#t {
-                background-color: black;
-                color: white;
-                padding: 1rem;
-            }
-            @media only screen and (max-width: 600px) {
-                div#answer {
-                    display: flex;
-                    justify-content: space-evenly;
-                    flex-wrap: wrap;
-                }
-            }
-            div.note-answer {
-                display: inline-block;
-                padding: .4rem 1rem;
-                background-color: lightblue;
-                cursor: pointer;
-                margin: 0 .5rem .5rem;
-            }
-            body {
-                font-family: Arial, Helvetica, sans-serif;
-            }
-            div#note-filter {
-                display: inline-block;
-            }
-            div#interval-filter {
-                display: inline-block;
-            }
-            div.nav {
-                display: flex;
-                margin: 0;
-                padding: 0;
-            }
-            div.nav > h4.item {
-                padding: 0 .5rem 0 0;
-                margin: 0;
-            }
-            div.nav > h4.item.toggle {
-                margin: 0 0 0 auto;
-            }
-            div#options {
-                margin: .5rem 0 0 0;
-            }
-        </style>
+        <link rel="stylesheet" type="text/css" href="style.css">
     </head>
-
     <body>
-        <div class="menu">
-            <div class="nav">
-                <h4 class="item"><a href="#" data-mode="game">Play</a></h4>
-                <h4 class="item"><a href="#" data-mode="help">Help</a></h4>
-                <h4 class="item toggle"><a href="#" id="toggle-options">Opt.</a></h4>
+        <main>
+            <div class="menu">
+                <div class="nav">
+                    <h4 class="item"><a href="#" data-mode="game">Play</a></h4>
+                    <h4 class="item"><a href="#" data-mode="metronome">Metronome</a></h4>
+                    <h4 class="item"><a href="#" data-mode="help">Help</a></h4>
+                    <h4 class="item toggle"><a href="#" id="toggle-options">Opt.</a></h4>
+                </div>
+                <div id="options" style="display: block">
+                    <div>
+                        <strong>Filter notes:</strong>
+                        <div id="note-filter"></div>
+                    </div>
+                    <div>
+                        <strong>Interval Filter:</strong>
+                        <div id="interval-filter"></div>
+                    </div>
+                    <div>
+                        <strong>Include Accidentals:</strong>
+                        <input type="checkbox" id="include-accidentals" />
+                        <strong>Randomise Buttons</strong>
+                        <input type="checkbox" id="randomise-buttons" />
+                    </div>
+                </div>
             </div>
-            <div id="options" style="display: block">
-                <div>
-                    <strong>Filter notes:</strong>
-                    <div id="note-filter"></div>
-                </div>
-                <div>
-                    <strong>Interval Filter:</strong>
-                    <div id="interval-filter"></div>
-                </div>
-                <div>
-                    <strong>Include Accidentals:</strong>
-                    <input type="checkbox" id="include-accidentals" />
-                    <strong>Randomise Buttons</strong>
-                    <input type="checkbox" id="randomise-buttons" />
-                </div>
+            <div class="container" data-container="game">
+                <h3 id="score"></h3>
+                <h2 id="t"></h2>
+                <div id="answer"></div>
+                <ul id="l"></ul>
             </div>
-        </div>
-        <div class="container" data-container="game">
-            <h3 id="score"></h3>
-            <h2 id="t"></h2>
-            <div id="answer"></div>
-            <ul id="l"></ul>
-        </div>
-        <div class="container" data-container="help"></div>
-
-        <script>
-            // MIT License found https://github.com/patmooney/learn-yo-scales/blob/master/LICENSE
-
-            const notes = ['Ab', 'A','Bb','B','C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G'];
-            const intervals = ['Perfect Unison (I)', 'Minor Second (Flat II)',
-                'Major Second (II)',
-                'Minor Third (Flat III)', 'Major Third (III)', 'Perfect Fourth (IV)',
-                'Tri-Tone (Flat V)', 'Perfect Fifth (V)', 'Minor Sixth (Flat VI)',
-                'Major Sixth (VI)', 'Minor Seventh (Flat VII)', 'Major Seventh (VII)',
-                'Perfect Octave (VIII)'];
-
-            const modes = { // Obviously a TODO to extend
-                'Ionian': [2, 2, 1, 2, 2, 2, 1] // whole whole half etc
-            };
-            const synonym = {
-                'A#': 'Bb',
-                'Db': 'C#',
-                'D#': 'Eb',
-                'Gb': 'F#',
-                'G#': 'Ab'
-            };
-
-            const noteMap = notes.reduce(
-                (nacc, n, nIdx) => ({ ...nacc, [n]: intervals.reduce(
-                    (iacc, i, iIdx) => ({
-                        ...iacc,
-                        [i]: getNote(nIdx, iIdx)
-                    }), {}
-                ) }), {}
-            );
-
-            function getNote(nIdx, iIdx) {
-                const idx = parseInt(nIdx) + parseInt(iIdx);
-                if (idx > notes.length - 1) {
-                    return notes[idx - (notes.length)];
-                }
-                return notes[idx];
-            }
-
-            /*
-                START completely over-engineers one-page web app without a framework bullshit
-            */
-            const containersMap = Array.prototype.reduce.call(
-                document.querySelectorAll('div.container'),
-                (acc, el) => ({
-                    ...acc,
-                    [el.dataset.container]: el
-                }), {}
-            );
-            const dispatch = { help, game };
-            const goEvt = new Event('go');
-            const filterEvt = new Event('filter');
-            Object.values(containersMap).forEach(
-                el => el.addEventListener('go', dispatch[el.dataset.container])
-            );
-            // start, AKA switch to new container and init it
-            function start(mode) {
-                const currentMode = document.querySelector('div.container.show');
-                if (currentMode) {
-                    currentMode.classList.remove('show');
-                    mode = mode || currentMode.dataset.container;
-                } else {
-                    mode = mode || 'play';
-                }
-                const newMode = document.querySelector(`div.container[data-container="${mode}"]`);
-                newMode.classList.add('show');
-                newMode.dispatchEvent(goEvt);
-            }
-            /*
-                END, I promise
-            */
-
-            function getAllowedNotes() {
-                let allowedNotes = Array.prototype.map.call(
-                    document.querySelectorAll('div.note-sel.selected'),
-                    el => el.innerText
-                );
-                return allowedNotes.length ? allowedNotes : notes;
-            }
-
-            // Per mode, and whether we should include accidental notes
-            function getAllowedIntervals () {
-                const allowedIntervals = Array.prototype.map.call(
-                    document.querySelectorAll('div.interval-sel.selected'),
-                    el => intervals[el.dataset.val]
-                );
-                if (allowedIntervals.length) {
-                    return allowedIntervals;
-                }
-
-                const mode = 'Ionian'; // to be continued....
-                if (document.getElementById('include-accidentals').checked) {
-                    return intervals;
-                }
-
-                // convert the modal relative intervals (whole whole half etc) into
-                // absolute indexes for our list of intervals
-                const modalIdxs = modes[mode].reduce(
-                    (acc, skip) => ([ ...acc, acc.slice(-1)[0] + skip ]), [0]
-                );
-
-                // convert absolute indexes into interval labels
-                return modalIdxs.reduce(
-                    (acc, idx) => ([ ...acc, intervals[idx] ]), []
-                );
-            }
-
-            // containers /  views
-            function help(evt) {
-                const allowedNotes = getAllowedNotes();
-                const allowedIntervals = getAllowedIntervals();
-                const container = evt.target;
-                container.innerHTML = "";
-                allowedNotes.forEach(
-                    note => {
-                        const div = document.createElement('div');
-                        const ul = document.createElement('ul');
-                        const title = document.createElement('h3');
-                        title.innerText = note;
-                        div.appendChild(title);
-
-                        allowedIntervals.forEach(
-                            interval => {
-                                const intNote = noteMap[note][interval];
-                                const li = document.createElement('li');
-                                li.innerHTML = `${interval}: <strong>${intNote}</strong>`;
-                                ul.appendChild(li);
-                            }
-                        )
-                        div.appendChild(ul);
-                        container.appendChild(div);
-                    }
-                );
-            }
-
-            function game() {
-                const text = document.getElementById('t');
-                const list = document.getElementById('l');
-                const scoreboard = document.getElementById('score');
-                const answerContainer = document.getElementById('answer');
-                let score = 0, total = -1, sTime = 0, tTime = -1;
-                list.innerHTML = "";
-                const allowedNotes = getAllowedNotes();
-                const allowedIntervals = getAllowedIntervals();
-
-                // view
-                function printButtons(initial = false) {
-                    const isRandom = document.getElementById('randomise-buttons').checked;
-                    const shouldRandom = isRandom && initial
-                        ? true
-                        : isRandom && Math.random() >= 0.8;
-
-                    console.log({ initial, isRandom, shouldRandom });
-
-                    if (!initial && !shouldRandom) {
-                        return;
-                    }
-
-                    const buttonNotes = shouldRandom
-                        ? shuffle(notes.slice())
-                        : notes;
-
-                    answerContainer.innerHTML = "";
-                    buttonNotes.forEach(
-                        n => {
-                            const divAns = document.createElement('div');
-                            divAns.classList.add('note-answer');
-                            divAns.addEventListener('click', submitAnswer);
-                            divAns.dataset.val = n;
-                            divAns.innerText = n;
-                            answerContainer.appendChild(divAns);
-                        }
-                    );
-                }
-
-                function normalise(input) {
-                    let normal = cF(input);
-                    normal = synonym[normal] || normal;
-                    if (notes.indexOf(normal) === -1){
-                        return false;
-                    }
-                    return normal;
-                }
-
-
-                function submitAnswer(e) {
-                    const answer = normalise(e.target.dataset.val);
-                    const correct = getNote(t.dataset.note, t.dataset.interval);
-                    if (answer === correct) {
-                        onCorrect(text.innerText, correct);
-                    } else {
-                        onWrong(text.innerText, correct, answer);
-                    }
-                    newQuestion();
-                    printButtons();
-                }
-
-                function cF(str) {
-                    return str.charAt(0).toUpperCase() + str.slice(1);
-                }
-                
-                function newQuestion() {
-                    // Get random note/interval pair
-                    const nIdx = getAllowedRandomNote();
-                    const iIdx = getAllowedRandomInterval();
-
-                    // Maintain state within the element
-                    t.dataset.note = nIdx;
-                    t.dataset.interval = iIdx;
-                    text.innerHTML = `${intervals[iIdx]} of <strong>${notes[nIdx]}</strong>`;
-
-                    // Update view
-                    total++;
-                    const avgTime = tTime > -1 && ((tTime / score) / 1000).toFixed(3);
-                    scoreboard.innerText = `Answered ${score} of ${total} / avg. time: ${avgTime ? `${avgTime}s` : '-'}`;
-                    sTime = Date.now();                
-                }
-
-                function getAllowedRandomNote() {
-                    const nIdx = Math.round(Math.random() * (allowedNotes.length - 1));
-                    return notes.indexOf(allowedNotes[nIdx]);
-                }
-
-                function getAllowedRandomInterval() {
-                    const iIdx = Math.round(Math.random() * (allowedIntervals.length - 1));
-                    return intervals.indexOf(allowedIntervals[iIdx]);
-                }
-
-                function onError(desc) {
-                    output(`<strong class='text-error'>Error:</strong> ${desc}`);
-                }
-
-                function onCorrect(desc, correct) {
-                    score++;
-                    tTime += Date.now() - sTime;
-                    output(`<strong class='text-correct'>Correct</strong> - The ${desc} is ${correct}`);
-                    flash("#DDFFDD");
-                }
-
-                function flash(fromColour) {
-                    document.body.style.transition = "";
-                    document.body.style.backgroundColor = fromColour;
-                    setTimeout(() => {
-                        document.body.style.transition = "background-color 1.5s";
-                        document.body.style.backgroundColor = "#FFFFFF";
-                    });
-                }
-
-                function onWrong(desc, correct, wrong) {
-                    output(`<strong class='text-wrong'>Wrong</strong> - The ${desc}
-                        is <strong><u>${correct}</u></strong>, not ${wrong}`);
-                    flash("#FFDDDD");
-                }
-
-                function output(html) {
-                    const li = document.createElement('li');
-                    li.innerHTML = html;
-                    list.insertBefore(li, list.firstChild);
-                }
-
-                // thankyou https://bost.ocks.org/mike/shuffle/
-                function shuffle(array) {
-                    let m = array.length, t, i;
-
-                    while (m) {
-                        i = Math.floor(Math.random() * m--);
-                        t = array[m];
-                        array[m] = array[i];
-                        array[i] = t;
-                    }
-                    return array;
-                }
-
-                newQuestion();
-                printButtons(true);
-            }
-
-            // global menu/settings setup
-            const noteFilterContainer = document.getElementById('note-filter');
-            notes.forEach(
-                n => {
-                    const divFil = document.createElement('div');
-                    divFil.classList.add('note-sel', 'filter-sel');
-                    divFil.addEventListener('click', evt => {
-                        const el = evt.target;
-                        if (el.classList.contains('selected')) {
-                            el.classList.remove('selected');
-                        } else {
-                            el.classList.add('selected');
-                        }
-                        start();
-                    });
-                    divFil.dataset.val = n;
-                    divFil.innerText = n;
-                    noteFilterContainer.appendChild(divFil);
-                }
-            );
-
-            const intervalFilterContainer = document.getElementById('interval-filter');
-            ['I', 'IIb', 'II', 'IIIb', 'III', 'IV', 'Vb', 'V', 'VIb', 'VI', 'VIIb', 'VII', 'VIII'].forEach(
-                (i, idx) => {
-                    const divFil = document.createElement('div');
-                    divFil.classList.add('interval-sel', 'filter-sel');
-                    divFil.addEventListener('click', evt => {
-                        const el = evt.target;
-                        if (el.classList.contains('selected')) {
-                            el.classList.remove('selected');
-                        } else {
-                            el.classList.add('selected');
-                        }
-                        start();
-                    });
-                    divFil.dataset.val = idx;
-                    divFil.innerText = i;
-                    intervalFilterContainer.appendChild(divFil);
-                }
-            );
-
-            document.getElementById('include-accidentals').addEventListener(
-                'change', evt => start()
-            );
-
-            document.querySelectorAll('h4.item > a').forEach(
-                el => el.addEventListener('click', (evt) => {
-                    evt.preventDefault();
-                    start(el.dataset.mode);
-                })
-            );
-
-            document.getElementById('toggle-options').addEventListener(
-                'click', evt => {
-                    const optContainer = document.getElementById('options');
-                    optContainer.style.display = optContainer.style.display === 'block'
-                        ? 'none'
-                        : 'block';
-                }
-            );
-
-            window.onload = () => start('game');
-        </script>
+            <div class="container" data-container="help"></div>
+            <div class="container" data-container="metronome">
+                <h1>EXPERIMENTAL</h1>
+                <div>
+                    <table>
+                        <tbody border=0>
+                            <tr>
+                                <td>Start BPM</td><td><input id="startBPM" value="60" /></td>
+                            </tr>
+                            <tr>
+                                <td>End BPM</td><td><input id="endBPM" value="120" /></td>
+                            </tr>
+                            <tr>
+                                <td>Increase By</td><td><input id="increase" value="5" /></td>
+                            </tr>
+                            <tr>
+                                <td>Bar Count</td><td><input id="barCount" value="4" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h2 id="bpm"></h2>
+            </div>
+            <script src="metronome.js"></script>
+            <script src="main.js"></script>
+        </main>
     </body>
 </html>
