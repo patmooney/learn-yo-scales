@@ -151,12 +151,12 @@ function metronome(evt) {
     const goButton = document.createElement('button');
     goButton.innerText = 'Start';
     goButton.addEventListener('click', () => {
-        const speed = parseInt(document.getElementById('startBPM').value) || 60; 
-        const max = parseInt(document.getElementById('endBPM').value) || 120; 
-        const upBy = parseInt(document.getElementById('increase').value) || 5; 
-        const upEveryN = parseInt(document.getElementById('barCount').value) || 4;
+        const speed = Math.max(Math.min(parseInt(document.getElementById('startBPM').value) || 60, 240), 40);
+        const max = Math.max(Math.min(parseInt(document.getElementById('endBPM').value) || 120, 240), 45);
+        const upBy = Math.max(Math.min(parseInt(document.getElementById('increase').value) || 5, 30), 1);
+        const upEveryN = Math.max(Math.min(parseInt(document.getElementById('barCount').value) || 4, 20), 1);
         const readOut = document.getElementById('bpm');
-        metro.go(speed, max, upBy, upEveryN, (n) => readOut.innerText = n.bpm);
+        metro.go(speed, max, upBy, upEveryN, (n) => readOut.innerText = `${n.bpm} bpm`);
     });
     evt.target.addEventListener(
         'clean',
