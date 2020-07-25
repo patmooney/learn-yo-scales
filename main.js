@@ -18,6 +18,19 @@ const synonym = {
     'G#': 'Ab'
 };
 
+const colourSchemes = {
+    night: {
+        bg: '#636363',
+        correct: '#436343',
+        wrong: '#634343'
+    },
+    day: {
+        bg: '#FFFFFF',
+        correct: '#DDFFDD',
+        wrong: '#FFDDDD'
+    }
+};
+
 const noteMap = notes.reduce(
     (nacc, n, nIdx) => ({ ...nacc, [n]: intervals.reduce(
         (iacc, i, iIdx) => ({
@@ -255,22 +268,30 @@ function game() {
         score++;
         tTime += Date.now() - sTime;
         output(`<strong class='text-correct'>Correct</strong> - The ${desc} is ${correct}`);
-        flash("#DDFFDD");
+        flash('correct');
     }
 
-    function flash(fromColour) {
+    function getColourScheme() {
+        if (document.getElementById('night-mode').checked) {
+            return colourSchemes.night;
+        }
+        return colourSchemes.day;
+    }
+
+    function flash(adj) {
+        const cS = getColourScheme();
         document.body.style.transition = "";
-        document.body.style.backgroundColor = fromColour;
+        document.body.style.backgroundColor = cS[adj];
         setTimeout(() => {
             document.body.style.transition = "background-color 1.5s";
-            document.body.style.backgroundColor = "#FFFFFF";
+            document.body.style.backgroundColor = cS.bg;
         });
     }
 
     function onWrong(desc, correct, wrong) {
         output(`<strong class='text-wrong'>Wrong</strong> - The ${desc}
             is <strong><u>${correct}</u></strong>, not ${wrong}`);
-        flash("#FFDDDD");
+        flash('wrong');
     }
 
     function output(html) {
@@ -354,6 +375,17 @@ document.getElementById('toggle-options').addEventListener(
         optContainer.style.display = optContainer.style.display === 'block'
             ? 'none'
             : 'block';
+    }
+);
+
+document.getElementById('night-mode').addEventListener(
+    'change', evt => {
+        document.body.style.transition = "background-color 1.5s";
+        if (evt.target.checked) {
+            document.body.style.backgroundColor = colourSchemes.night.bg;
+        } else {
+            document.body.style.backgroundColor = colourSchemes.day.bg;
+        }
     }
 );
 
