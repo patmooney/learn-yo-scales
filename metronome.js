@@ -1,12 +1,20 @@
 function Metronome() {
     this.to = null;
     this.lengthSec = 0.1;
+    this.isPlaying = false;
 }
 
-Metronome.prototype.go = function go(speed, max, upBy, upEveryN, cb) {
+Metronome.prototype.stop = function stop() {
     if (this.to) {
         clearTimeout(this.to);
+        this.isPlaying = false;
     }
+}
+
+
+Metronome.prototype.go = function go(speed, max, upBy, upEveryN, cb) {
+    this.stop();
+    this.isPlaying = true;
     const that = this;
 
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -30,7 +38,7 @@ Metronome.prototype.go = function go(speed, max, upBy, upEveryN, cb) {
             oscillator.start(now);
             oscGain.gain.setValueAtTime(0, now);
             oscGain.gain.linearRampToValueAtTime(1, now + 0.03);
-
+            oscGain.gain.linearRampToValueAtTime(0.0001, now + 0.09);
             oscillator.stop(now + lengthSec);
             run();
         }, (time - 0.03) * 1000);
@@ -38,16 +46,12 @@ Metronome.prototype.go = function go(speed, max, upBy, upEveryN, cb) {
 
     function getNotes() {
         const notes = [];
-        let currentBpm = speed;
         const maxItr = (max - speed) / upBy;
         for (let nItr = 0; nItr <= maxItr; nItr++) {
-            const previousItr = notes.length
-                ? notes.slice(-1)[0].time
-                : 0;
             for (let nCount = 0; nCount < upEveryN; nCount++) {
                 for (let beat = 1; beat < 5; beat++) {
                     let hz = 440;
-                    if (beat > 0 && beat % 4 === 0){
+                    if (beat === 1) {
                         hz = 660;
                     }
                     notes.push({

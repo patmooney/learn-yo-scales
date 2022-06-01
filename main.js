@@ -122,6 +122,7 @@ function getAllowedIntervals () {
 function help(evt) {
     const allowedNotes = getAllowedNotes();
     const allowedIntervals = getAllowedIntervals();
+    document.getElementById('options').style.display = 'none';
     const container = evt.target;
     container.innerHTML = "";
     allowedNotes.forEach(
@@ -150,13 +151,21 @@ function metronome(evt) {
     const metro = new Metronome();
     const goButton = document.createElement('button');
     goButton.innerText = 'Start';
+    document.getElementById('options').style.display = 'none';
+
     goButton.addEventListener('click', () => {
+        if (metro.isPlaying) {
+            metro.stop();
+            goButton.innerText = 'Start';
+            return;
+        }
         const speed = Math.max(Math.min(parseInt(document.getElementById('startBPM').value) || 60, 240), 40);
         const max = Math.max(Math.min(parseInt(document.getElementById('endBPM').value) || 120, 240), 45);
         const upBy = Math.max(Math.min(parseInt(document.getElementById('increase').value) || 5, 30), 1);
         const upEveryN = Math.max(Math.min(parseInt(document.getElementById('barCount').value) || 4, 20), 1);
         const readOut = document.getElementById('bpm');
         metro.go(speed, max, upBy, upEveryN, (n) => readOut.innerText = `${n.bpm} bpm`);
+        goButton.innerText = 'Stop';
     });
     evt.target.addEventListener(
         'clean',
@@ -172,6 +181,7 @@ function metronome(evt) {
 function game() {
     const text = document.getElementById('t');
     const list = document.getElementById('l');
+    document.getElementById('options').style.display = 'block';
     const scoreboard = document.getElementById('score');
     const answerContainer = document.getElementById('answer');
     let score = 0, total = -1, sTime = 0, tTime = -1;
@@ -362,7 +372,7 @@ document.getElementById('include-accidentals').addEventListener(
     'change', evt => start()
 );
 
-document.querySelectorAll('h4.item > a').forEach(
+document.querySelectorAll('h4.item > a.mode').forEach(
     el => el.addEventListener('click', (evt) => {
         evt.preventDefault();
         start(el.dataset.mode);
@@ -371,6 +381,7 @@ document.querySelectorAll('h4.item > a').forEach(
 
 document.getElementById('toggle-options').addEventListener(
     'click', evt => {
+        console.log('DO IT');
         const optContainer = document.getElementById('options');
         optContainer.style.display = optContainer.style.display === 'block'
             ? 'none'
