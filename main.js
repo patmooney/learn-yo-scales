@@ -147,6 +147,21 @@ function help(evt) {
     );
 }
 
+function getValClamp(id, defaultVal, min, max) {
+    const val = document.getElementById(id).value;
+    const numericVal = val && parseInt(val, 10);
+    if (!numericVal || !Number.isInteger(numericVal)) {
+        return defaultVal;
+    }
+    return Math.min(
+        max,
+        Math.max(
+            min,
+            numericVal
+        )
+    )
+}
+
 function metronome(evt) {
     const metro = new Metronome();
     const goButton = document.createElement('button');
@@ -159,12 +174,13 @@ function metronome(evt) {
             goButton.innerText = 'Start';
             return;
         }
-        const speed = Math.max(Math.min(parseInt(document.getElementById('startBPM').value) || 60, 240), 40);
-        const max = Math.max(Math.min(parseInt(document.getElementById('endBPM').value) || 120, 240), 45);
-        const upBy = Math.max(Math.min(parseInt(document.getElementById('increase').value) || 5, 30), 1);
-        const upEveryN = Math.max(Math.min(parseInt(document.getElementById('barCount').value) || 4, 20), 1);
+        const speed = getValClamp('startBPM', 60, 1, 300);
+        const max = getValClamp('endBPM', 120, speed+1, 301);
+        const upBy = getValClamp('increase', 5, 1, 100);
+        const upEveryN = getValClamp('barCount', 4, 1, 1000);
+        const beatsPerBar = getValClamp('beatCount', 4, 1, 32);
         const readOut = document.getElementById('bpm');
-        metro.go(speed, max, upBy, upEveryN, (n) => readOut.innerText = `${n.bpm} bpm`);
+        metro.go(speed, max, upBy, upEveryN, beatsPerBar, (n) => readOut.innerText = `${n.bpm} bpm`);
         goButton.innerText = 'Stop';
     });
     evt.target.addEventListener(

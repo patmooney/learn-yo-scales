@@ -12,7 +12,7 @@ Metronome.prototype.stop = function stop() {
 }
 
 
-Metronome.prototype.go = function go(speed, max, upBy, upEveryN, cb) {
+Metronome.prototype.go = function go(speed, max, upBy, upEveryN, beatsPerBar, cb) {
     this.stop();
     this.isPlaying = true;
     const that = this;
@@ -49,7 +49,7 @@ Metronome.prototype.go = function go(speed, max, upBy, upEveryN, cb) {
         const maxItr = (max - speed) / upBy;
         for (let nItr = 0; nItr <= maxItr; nItr++) {
             for (let nCount = 0; nCount < upEveryN; nCount++) {
-                for (let beat = 1; beat < 5; beat++) {
+                for (let beat = 1; beat <= beatsPerBar; beat++) {
                     let hz = 440;
                     if (beat === 1) {
                         hz = 660;

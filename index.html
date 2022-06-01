@@ -46,16 +46,19 @@
                     <table>
                         <tbody border=0>
                             <tr>
-                                <td>Start BPM</td><td><input id="startBPM" value="60" /></td>
+                                <td>Start BPM</td><td><input id="startBPM" value="60" type="number" min="20" max="300" /> (20-300)</td>
                             </tr>
                             <tr>
-                                <td>End BPM</td><td><input id="endBPM" value="120" /></td>
+                                <td>End BPM</td><td><input id="endBPM" value="120" type="number" min="20" max="300" /> (20-300)</td>
                             </tr>
                             <tr>
-                                <td>Increase By</td><td><input id="increase" value="5" /></td>
+                                <td>Increase By</td><td><input id="increase" value="5" type="number" min="0" max="300"/> (0-300)</td>
                             </tr>
                             <tr>
-                                <td>Bar Count</td><td><input id="barCount" value="4" /></td>
+                                <td>Bar Count</td><td><input id="barCount" value="4" type="number" min="1" /> (1-n)</td>
+                            </tr>
+                            <tr>
+                                <td>Beats per bar</td><td><input id="beatCount" value="4" type="number" min="1" max="32" /> (1-32)</td>
                             </tr>
                         </tbody>
                     </table>
