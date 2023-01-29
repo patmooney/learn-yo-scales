@@ -58,7 +58,7 @@ const containersMap = Array.prototype.reduce.call(
         [el.dataset.container]: el
     }), {}
 );
-const dispatch = { help, game, metronome };
+const dispatch = { help, game, metronome, earTraining };
 const goEvt = new Event('go');
 const cleanEvt = new Event('clean');
 Object.values(containersMap).forEach(
@@ -162,36 +162,99 @@ function getValClamp(id, defaultVal, min, max) {
     )
 }
 
+function earTraining(evt) {
+    const earTraining = new EarTraining();
+    document.getElementById('options').style.display = 'none';
+    const readOut = document.getElementById('readOut');
+    const goButton = document.createElement('button');
+    goButton.classList.add('control-button');
+    goButton.innerText = 'Play Note';
+    goButton.id = 'ear-training-go';
+    goButton.style.backgroundColor = 'green';
+    goButton.addEventListener('click', () => {
+        earTraining.stop();
+        earTraining.playRandomNote(({ noteLabel }) => readOut.innerText = noteLabel);
+    })
+    evt.target.appendChild(goButton);
+    evt.target.addEventListener(
+        'clean',
+        (evt) => {
+            evt.target.removeChild(document.getElementById(goButton.id));
+            earTraining.stop()
+        },
+        { once: true }
+    );
+}
+
 function metronome(evt) {
     const metro = new Metronome();
-    const goButton = document.createElement('button');
-    goButton.innerText = 'Start';
     document.getElementById('options').style.display = 'none';
+    const readOut = document.getElementById('bpm');
 
+    const updateTempo = (tempo) => {
+        document.getElementById('startBPM').value = tempo;
+        readOut.innerText = `${tempo} bpm`;
+    };
+
+    const goButton = document.createElement('button');
+    goButton.classList.add('control-button');
+    goButton.innerText = 'Start';
+    goButton.id = 'metronome-go';
+    goButton.style.backgroundColor = 'green';
     goButton.addEventListener('click', () => {
         if (metro.isPlaying) {
             metro.stop();
             goButton.innerText = 'Start';
+            goButton.style.backgroundColor = 'green';
             return;
         }
+        const speedTrainCheckVal = document.getElementById('speedTrainCheck').checked;
         const speed = getValClamp('startBPM', 60, 1, 300);
-        const max = getValClamp('endBPM', 120, speed+1, 301);
-        const upBy = getValClamp('increase', 5, 1, 100);
-        const upEveryN = getValClamp('barCount', 4, 1, 1000);
         const beatsPerBar = getValClamp('beatCount', 4, 1, 32);
-        const readOut = document.getElementById('bpm');
-        metro.go(speed, max, upBy, upEveryN, beatsPerBar, (n) => readOut.innerText = `${n.bpm} bpm`);
+
+        if (speedTrainCheckVal) {
+            const max = getValClamp('endBPM', 120, speed+1, 301);
+            const upBy = getValClamp('increase', 5, 1, 100);
+            const upEveryN = getValClamp('barCount', 4, 1, 1000);
+            metro.train(speed, max, upBy, upEveryN, beatsPerBar, (n) => readOut.innerText = `${n.bpm} bpm`);
+        } else {
+            readOut.innerText = `${speed} bpm`;
+            metro.metronome(speed, beatsPerBar);
+        }
+        goButton.style.backgroundColor = 'red';
         goButton.innerText = 'Stop';
     });
+
+    const tapTempoButton = document.createElement('button');
+    tapTempoButton.innerText = 'Tap';
+    tapTempoButton.classList.add('control-button');
+    tapTempoButton.id = 'metronome-tap';
+    tapTempoButton.addEventListener('click', () => {
+        const now = Date.now();
+        if (window._tapTempoTs) {
+            const newTempo = parseInt(
+                (1000 * 60) // ms in a minute
+                /
+                (now - window._tapTempoTs) // ms since last click
+            );
+            updateTempo(newTempo);
+        }
+        window._tapTempoTs = now;
+    });
+    tapTempoButton.style['margin-left'] = '10px';
+
     evt.target.addEventListener(
         'clean',
-        () => {
-            goButton.parentNode.removeChild(goButton);
-            metro.go()
+        (evt) => {
+            evt.target.removeChild(document.getElementById(goButton.id));
+            evt.target.removeChild(document.getElementById(tapTempoButton.id));
+            metro.stop()
         },
         { once: true }
     );
+
     evt.target.appendChild(goButton);
+    evt.target.appendChild(tapTempoButton);
 }
 
 function game() {
@@ -397,7 +460,6 @@ document.querySelectorAll('h4.item > a.mode').forEach(
 
 document.getElementById('toggle-options').addEventListener(
     'click', evt => {
-        console.log('DO IT');
         const optContainer = document.getElementById('options');
         optContainer.style.display = optContainer.style.display === 'block'
             ? 'none'
@@ -412,6 +474,18 @@ document.getElementById('night-mode').addEventListener(
             document.body.style.backgroundColor = colourSchemes.night.bg;
         } else {
             document.body.style.backgroundColor = colourSchemes.day.bg;
+        }
+    }
+);
+
+document.getElementById('speedTrainCheck').addEventListener(
+    'change', evt => {
+        const group = document.querySelectorAll('[data-group="speedTrain"]');
+        console.log(evt.target.checked);
+        if (evt.target.checked) {
+            group.forEach(el => el.classList.remove('hidden'));
+        } else {
+            group.forEach(el => el.classList.add('hidden'));
         }
     }
 );

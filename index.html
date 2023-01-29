@@ -11,6 +11,7 @@
                 <div class="nav">
                     <h4 class="item"><a href="#" data-mode="game" class="mode">Play</a></h4>
                     <h4 class="item"><a href="#" data-mode="metronome" class="mode">Metronome</a></h4>
+                    <h4 class="item"><a href="#" data-mode="earTraining" class="mode">Ear Training</a></h4>
                     <h4 class="item"><a href="#" data-mode="help" class="mode">Help</a></h4>
                     <h4 class="item toggle"><a href="#" id="toggle-options">Opt.</a></h4>
                 </div>
@@ -49,23 +50,30 @@
                                 <td>Start BPM</td><td><input id="startBPM" value="60" type="number" min="20" max="300" /> (20-300)</td>
                             </tr>
                             <tr>
+                                <td>Beats per bar</td><td><input id="beatCount" value="4" type="number" min="1" max="32" /> (1-32)</td>
+                            </tr>
+                            <tr>
+                                <td>Enable speed training?</td><td><input id="speedTrainCheck" type="checkbox" autocomplete="off" /></td>
+                            </tr>
+                            <tr class="hidden" data-group="speedTrain">
                                 <td>End BPM</td><td><input id="endBPM" value="120" type="number" min="20" max="300" /> (20-300)</td>
                             </tr>
-                            <tr>
+                            <tr class="hidden" data-group="speedTrain">
                                 <td>Increase By</td><td><input id="increase" value="5" type="number" min="0" max="300"/> (0-300)</td>
                             </tr>
-                            <tr>
+                            <tr class="hidden" data-group="speedTrain">
                                 <td>Bar Count</td><td><input id="barCount" value="4" type="number" min="1" /> (1-n)</td>
-                            </tr>
-                            <tr>
-                                <td>Beats per bar</td><td><input id="beatCount" value="4" type="number" min="1" max="32" /> (1-32)</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
                 <h2 id="bpm">0 bpm</h2>
             </div>
+            <div class="container" data-container="earTraining">
+                <h3 id="readOut"></h3>
+            </div>
             <script src="metronome.js"></script>
+            <script src="ear-training.js"></script>
             <script src="main.js"></script>
         </main>
     </body>

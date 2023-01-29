@@ -94,3 +94,14 @@ div#options {
         margin: 0 auto;
     }
 }
+.hidden {
+  display: none;
+}
+
+button.control-button {
+  padding: .5rem 1.5rem;
+  color: white;
+  font-size: 2rem;
+  font-weight: 700;
+  background-color: blue;
+}
