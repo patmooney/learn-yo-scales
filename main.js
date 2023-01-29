@@ -166,20 +166,43 @@ function earTraining(evt) {
     const earTraining = new EarTraining();
     document.getElementById('options').style.display = 'none';
     const readOut = document.getElementById('readOut');
-    const goButton = document.createElement('button');
-    goButton.classList.add('control-button');
-    goButton.innerText = 'Play Note';
-    goButton.id = 'ear-training-go';
-    goButton.style.backgroundColor = 'green';
-    goButton.addEventListener('click', () => {
+    const replayButton = document.createElement('button');
+    replayButton.classList.add('control-button');
+    replayButton.classList.add('hidden');
+    replayButton.innerText = 'Replay';
+    replayButton.id = 'ear-training-replay';
+    replayButton.style.backgroundColor = 'green';
+    replayButton.addEventListener('click', () => {
         earTraining.stop();
-        earTraining.playRandomNote(({ noteLabel }) => readOut.innerText = noteLabel);
+        earTraining.playPattern(
+            document.getElementById('ear-training-chords').checked,
+            ({ noteLabel }) => readOut.innerText = noteLabel
+        );
+    });
+    const newButton = document.createElement('button');
+    newButton.classList.add('control-button');
+    newButton.innerText = 'New Pattern';
+    newButton.id = 'ear-training-go';
+    newButton.style.backgroundColor = 'red';
+    newButton.addEventListener('click', () => {
+        replayButton.classList.remove('hidden');
+    }, { once: true })
+    newButton.addEventListener('click', () => {
+        const noteCount = getValClamp('ear-training-note-count', 16, 1, 32);
+        earTraining.stop();
+        earTraining.newPattern(noteCount);
+        earTraining.playPattern(
+            document.getElementById('ear-training-chords').checked,
+            ({ noteLabel }) => readOut.innerText = noteLabel
+        );
     })
-    evt.target.appendChild(goButton);
+    evt.target.appendChild(replayButton);
+    evt.target.appendChild(newButton);
     evt.target.addEventListener(
         'clean',
         (evt) => {
-            evt.target.removeChild(document.getElementById(goButton.id));
+            evt.target.removeChild(document.getElementById(newButton.id));
+            evt.target.removeChild(document.getElementById(replayButton.id));
             earTraining.stop()
         },
         { once: true }

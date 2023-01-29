@@ -19,38 +19,45 @@ class EarTraining {
         this.isPlaying = false;
         this.lambda = 1.059463;
     }
+    newPattern(noteCount = 16) {
+        this.noteCount = noteCount;
+        this.rootNote = (L_NOTES) + Math.round(Math.random() * N_NOTES_21_FRET_GUITAR);
+        this.scale = this._getScale(this.rootNote);
+        this.notes = this._getNotes();
+        this.chords = this._getChords(this.rootNote, this.scale, Math.ceil(this.noteCount / 4));
+    }
     stop () {
         if (this.to) {
             clearTimeout(this.to);
             this.isPlaying = false;
         }
     }
-    playRandomNote(cb = () => {}) {
+    _getNotes() {
+        let nextNote = this.scale.indexOf(this.rootNote);
+        const nextNotes = [this.scale[nextNote]];
+        for (let i = 0; i < (this.noteCount - 1); i++) {
+            nextNote = this._getRandomRelatedNote(nextNote, this.scale);
+            nextNotes.push(this.scale[nextNote]);
+        }
+        return nextNotes;
+    }
+    playPattern(enableChords = true, cb = () => {}) {
+        const nextNotes = this.notes;
+        const chords = this.chords;
         this.stop();
         this.isPlaying = true;
-        // get an offset where MID_NOTE is note 0, we can have 23 notes above or below.
-        const rootNote = (L_NOTES) + Math.round(Math.random() * N_NOTES_21_FRET_GUITAR);
-        const scale = this._getScale(rootNote);
-        const chords = this._getChords(rootNote, scale);
-
-        let nextNote = scale.indexOf(rootNote);
-        const nextNotes = [scale[nextNote]];
-        for (let i = 0; i < 15; i++) {
-            nextNote = this._getRandomRelatedNote(nextNote, scale);
-            nextNotes.push(scale[nextNote]);
-        }
+        const chordPlayTime = this.lengthSec * 4;
         cb({ noteLabel: nextNotes.map(n => this._noteToLabel(n)).join(' - ') });
         let idx = 0;
         let chordIdx = 0;
         const run = () => {
             const note = nextNotes.at(idx);
-            console.log({ note, hz: this._noteToHz(note), label: this._noteToLabel(note) });
             this._playNote(this._noteToHz(note), this.lengthSec, 0.5);
-            if (idx % 4 === 0){
+            if (enableChords && idx % 4 === 0){
                 const chord = chords[chordIdx++];
-                this._playNote(this._noteToHz(chord[0]), this.lengthSec * (nextNotes.length / 4), 0.1);
-                this._playNote(this._noteToHz(chord[1]), this.lengthSec * (nextNotes.length / 4), 0.1);
-                this._playNote(this._noteToHz(chord[2]), this.lengthSec * (nextNotes.length / 4), 0.1);
+                this._playNote(this._noteToHz(chord[0]), chordPlayTime, 0.1);
+                this._playNote(this._noteToHz(chord[1]), chordPlayTime, 0.1);
+                this._playNote(this._noteToHz(chord[2]), chordPlayTime, 0.1);
             }
             idx++;
             if (idx < nextNotes.length) {
@@ -117,8 +124,8 @@ class EarTraining {
         if (newNote < 0) {
             return 0-newNote;
         }
-        if (newNote >= (scale.length - 1)) {
-            return scale.length - newNote;
+        if (newNote >= scale.length) {
+            return scale.length - (newNote - scale.length) - 1;
         }
         return newNote;
     }
